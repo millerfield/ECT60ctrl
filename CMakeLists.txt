@@ -1,4 +1,6 @@
-cmake_minimum_required(VERSION 3.9)
+cmake_minimum_required(VERSION 3.13)
+
+set(ENABLE_PIGPIO "0" CACHE STRING "Description")
 
 project(ECT60ctrl
 	VERSION 0.0.1
@@ -18,10 +20,14 @@ add_executable(${NAME_EXE} ${SOURCE})
 
 
 target_link_libraries(${NAME_EXE}
-	PRIVATE pigpio
 	PRIVATE ethercat
 	PRIVATE ncurses 
 	PRIVATE pthread
 	PRIVATE rt)
 
+if(${ENABLE_PIGPIO} EQUAL "1")
+	add_compile_definitions(PIGPIO_OUT)
+	target_link_libraries(${NAME_EXE}
+		PRIVATE pigpio)
+endif()
 

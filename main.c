@@ -41,11 +41,14 @@
 #include <malloc.h>
 #include <sched.h> /* sched_setscheduler() */
 #include <errno.h>
+#include <pthread.h>
 
 /****************************************************************************/
 
 #include "ecrt.h"
+#ifdef PIGPIO_OUT
 #include "pigpio.h"
+#endif
 #include "servo_gui.h"
 /****************************************************************************/
 // Optional features
@@ -58,7 +61,6 @@
 #define FREQUENCY 1000
 #define CLOCK_TO_USE CLOCK_MONOTONIC
 #define MEASURE_TIMING
-#define PIGPIO_OUT
 #define NCURSES_GUI
 
 /****************************************************************************/
@@ -190,6 +192,7 @@ void signal_handler(int signo)
   else if (signo == SIGTERM)
     printf("received SIGTERM %d\n", signo);
 
+  exit(0);
   return;
 }
 

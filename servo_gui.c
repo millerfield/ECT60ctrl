@@ -22,9 +22,10 @@
 #include <mqueue.h>
 #include "ecrt.h"
 #include <errno.h>
+#ifdef PIGPIO_OUT
 #include "pigpio.h"
+#endif
 
-#define PIGPIO_OUT
 #define NCURSES_GUI
 #define MSGSIZE 5
 
