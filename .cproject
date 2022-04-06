@@ -28,11 +28,12 @@
 					</folderInfo>
 				</configuration>
 			</storageModule>
-			<storageModule buildDir="_build/${ConfigName}" dirtyTs="1648833559847" moduleId="de.marw.cmake4eclipse.mbs.settings">
+			<storageModule buildDir="_build/${ConfigName}" dirtyTs="1649272940600" moduleId="de.marw.cmake4eclipse.mbs.settings">
 				<options/>
 				<defs>
 					<def name="CMAKE_PREFIX_PATH" type="STRING" val="/usr/local/lib"/>
 					<def name="CMAKE_TOOLCHAIN_FILE" type="STRING" val="armhf.cmake"/>
+					<def name="CMAKE_FIND_ROOT_PATH" type="STRING" val="&quot;/home/guest/workspace_rpios&quot;"/>
 				</defs>
 			</storageModule>
 			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
