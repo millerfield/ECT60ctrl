@@ -22,12 +22,13 @@
 #include <mqueue.h>
 #include "ecrt.h"
 #include <errno.h>
+#include "servo_gui.h"
 #ifdef PIGPIO_OUT
 #include "pigpio.h"
 #endif
 
 #define NCURSES_GUI
-#define MSGSIZE 5
+//#define MSGSIZE 5
 
 
 
@@ -81,9 +82,11 @@ void print_domain1_state(WINDOW* win, int curs_y, int curs_x)
 void* ncurses_gui(void* arg)
 {
 	int ymax, xmax;
-	int long velocity;
+	//int long velocity;
 	struct mq_attr attr;
 	signed char mode_of_operation;
+	t_queue_data queue_data;
+
 
     struct sched_param param = {};
     param.sched_priority = sched_get_priority_max(SCHED_FIFO)-1;
@@ -128,7 +131,7 @@ void* ncurses_gui(void* arg)
 #endif
             }
        	// Comming here if queue is not empty triggered by signal from main thread
-        mq_receive(myqueue, (char *)&velocity, MSGSIZE, 0);
+        mq_receive(myqueue, (char *)&queue_data, sizeof(t_queue_data)+1, 0);
         // Get actual number of messages from queue
         mq_getattr(myqueue, &attr);
         // and store into the shared variable
@@ -146,9 +149,9 @@ void* ncurses_gui(void* arg)
 		//print_domain1_state(win, 15, 10);
 		//mode_of_operation = EC_READ_S8((void*)(domain_pd + CiA402_reg6061));
 //		mvwprintw(win, 11, 10, "Mode of operation: %d", mode_of_operation);
-    	mvwprintw(win, 10, 10, "Expected velocity: %ld", velocity);
-    	mvwprintw(win, 11, 10, "Actual velocity: %ld", velocity);
-    	mvwprintw(win, 12, 10, "Variance: %ld", velocity);
+    	mvwprintw(win, 10, 10, "Expected velocity: %ld", queue_data.velocity_setpoint);
+    	mvwprintw(win, 11, 10, "Actual velocity: %ld", queue_data.velocity);
+    	mvwprintw(win, 12, 10, "Variance: %ld", queue_data.velocity);
 		wrefresh(win);
 	}
 	endwin();

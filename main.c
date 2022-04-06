@@ -84,7 +84,9 @@ static ec_domain_state_t domain1_state = {};
 static ec_slave_config_t *sc_ECT60_config = NULL;
 static ec_slave_config_state_t sc_ECT60_state = {};
 
-static signed int long velocity;
+//static signed int long velocity;
+static t_queue_data queue_data;
+
 static signed char mode_of_operation;
 static unsigned int digout;
 
@@ -95,7 +97,7 @@ int long curmessages;
 
 #define myqueue_name "/myqueue"
 #define MAXMSG 10
-#define MSGSIZE 5
+//#define MSGSIZE 5
 
 /****************************************************************************/
 
@@ -268,7 +270,7 @@ void read_sdo(void)
 
 void cyclic_task()
 {
-	int long velocity, ret;
+	int long ret;
 
     struct timespec wakeupTime, time;
 #ifdef MEASURE_TIMING
@@ -337,10 +339,12 @@ void cyclic_task()
         //************** lock queue ***********************//
         // Lock mutex
         pthread_mutex_lock(&mymutex);
-        // Read velocity from ethercat PDO's
-        velocity = EC_READ_S32((void*)(domain1_pd + CiA402_reg606c));
+        // Read velocity from ethercat TX-PDO's
+        queue_data.velocity = EC_READ_S32((void*)(domain1_pd + CiA402_reg606c));
+        // Read setpoint velocity from RX-PDO's
+        queue_data.velocity_setpoint = EC_READ_S32((void*)(domain1_pd + CiA402_reg60ff));
         // Send velocity over message queue to gui thread
-        ret = mq_send(myqueue, (const char *)&velocity, MSGSIZE, 0);
+        ret = mq_send(myqueue, (const char *)&queue_data, sizeof(t_queue_data)+1, 0);
         {	// read number of current messages in queue
         	struct mq_attr attr;
         	mq_getattr(myqueue, &attr);
@@ -430,7 +434,7 @@ void cyclic_task()
 int main(int argc, char **argv)
 {
 	// open a message queue for communication between threads
-	struct mq_attr attr = {.mq_flags = 0, .mq_maxmsg = MAXMSG, .mq_msgsize = MSGSIZE, .mq_curmsgs = 0};
+	struct mq_attr attr = {.mq_flags = 0, .mq_maxmsg = MAXMSG, .mq_msgsize = sizeof(t_queue_data)+1, .mq_curmsgs = 0};
 	myqueue = mq_open(myqueue_name, O_WRONLY | O_CREAT | O_NONBLOCK, 0660, &attr);
 	// Init the mutex for safe interthread communication
 	pthread_mutex_init(&mymutex, NULL);

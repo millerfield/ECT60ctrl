@@ -4,11 +4,13 @@ Also install additional needed libraries to the target:
 ```
 sudo apt-get install libpigpio-dev libpigpio1 libncurses-dev 
 ```
+Check if user who is running the application is in group root.
+
 ## Build:
 ```
 mkdir build
 cd build
-cmake .. -DCMAKE_PREFIX_PATH=/usr/local/lib
+cmake .. -DCMAKE_PREFIX_PATH=/usr/local/lib -DCMAKE_BUILD_TYPE:STRING=Debug -DCMAKE_TOOLCHAIN_FILE:STRING=armhf.cmake
 make
 ```
 
