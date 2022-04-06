@@ -11,3 +11,16 @@ cd build
 cmake .. -DCMAKE_PREFIX_PATH=/usr/local/lib
 make
 ```
+
+## Deploy
+Copy over the executable to the target:
+```
+
+```
+
+## Execute
+To let ECT60ctrl raise realtime scheduling priority as non-root user, set the CAP_SYS_NICE capability of the executable:
+```
+sudo setcap cap_sys_nice+ep ./ECT60ctrl
+./ECT60ctrl
+```

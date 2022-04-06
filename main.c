@@ -192,6 +192,7 @@ void signal_handler(int signo)
   else if (signo == SIGTERM)
     printf("received SIGTERM %d\n", signo);
 
+  ncurses_gui_deinit();
   exit(0);
   return;
 }

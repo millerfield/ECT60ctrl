@@ -19,7 +19,7 @@
 					<folderInfo id="cmake4eclipse.mbs.config.debug.1742868360." name="/" resourcePath="">
 						<toolChain id="cmake4eclipse.mbs.config.debug.toolChain.1693930528" name="CMake driven" superClass="cmake4eclipse.mbs.config.debug.toolChain">
 							<targetPlatform id="cmake4eclipse.mbs.targetPlatform.cmake.439547589" name="Any Platform" superClass="cmake4eclipse.mbs.targetPlatform.cmake"/>
-							<builder buildPath="/ECT60ctrl/_build/Debug" id="cmake4eclipse.mbs.builder.1878528882" managedBuildOn="true" name="CMake Builder.Debug" superClass="cmake4eclipse.mbs.builder"/>
+							<builder buildPath="/ECT60ctrl/_build/Debug" id="cmake4eclipse.mbs.builder.1878528882" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="CMake Builder" superClass="cmake4eclipse.mbs.builder"/>
 							<tool id="cmake4eclipse.mbs.toolchain.tool.dummy.2055836725" name="CMake" superClass="cmake4eclipse.mbs.toolchain.tool.dummy">
 								<inputType id="cmake4eclipse.mbs.inputType.c.1737291010" superClass="cmake4eclipse.mbs.inputType.c"/>
 								<inputType id="cmake4eclipse.mbs.inputType.cpp.488686344" superClass="cmake4eclipse.mbs.inputType.cpp"/>
@@ -64,7 +64,9 @@
 					</folderInfo>
 				</configuration>
 			</storageModule>
-			<storageModule moduleId="de.marw.cmake4eclipse.mbs.settings"/>
+			<storageModule buildDir="build" dirtyTs="0" moduleId="de.marw.cmake4eclipse.mbs.settings">
+				<options/>
+			</storageModule>
 			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
 		</cconfiguration>
 		<cconfiguration id="cmake4eclipse.mbs.config.release.428628720">
@@ -105,5 +107,16 @@
 		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
-	<storageModule moduleId="refreshScope"/>
+	<storageModule moduleId="refreshScope" versionNumber="2">
+		<configuration configurationName="Default">
+			<resource resourceType="PROJECT" workspacePath="/ECT60ctrl"/>
+		</configuration>
+		<configuration configurationName="Debug">
+			<resource resourceType="PROJECT" workspacePath="/ECT60ctrl"/>
+		</configuration>
+		<configuration configurationName="Release">
+			<resource resourceType="PROJECT" workspacePath="/ECT60ctrl"/>
+		</configuration>
+	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
 </cproject>

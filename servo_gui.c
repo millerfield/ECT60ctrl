@@ -102,7 +102,6 @@ void* ncurses_gui(void* arg)
 	win = newwin(ymax-2, xmax-2, 1, 1);
 	refresh();
 	box(win, 0, 0);
-	wgetch(win);
 
 	while(1)
 	{
@@ -147,7 +146,9 @@ void* ncurses_gui(void* arg)
 		//print_domain1_state(win, 15, 10);
 		//mode_of_operation = EC_READ_S8((void*)(domain_pd + CiA402_reg6061));
 //		mvwprintw(win, 11, 10, "Mode of operation: %d", mode_of_operation);
-    	mvwprintw(win, 10, 10, "Velocity: %ld", velocity);
+    	mvwprintw(win, 10, 10, "Expected velocity: %ld", velocity);
+    	mvwprintw(win, 11, 10, "Actual velocity: %ld", velocity);
+    	mvwprintw(win, 12, 10, "Variance: %ld", velocity);
 		wrefresh(win);
 	}
 	endwin();
@@ -177,6 +178,11 @@ void ncurses_gui_init(ec_master_t* pmaster, ec_domain_t* pdomain, uint8_t *pdoma
     pthread_create(&ncurses_thread_id, &attr, &ncurses_gui, NULL);
 }
 
+
+void ncurses_gui_deinit(void)
+{
+	endwin();
+}
 
 
 #endif
