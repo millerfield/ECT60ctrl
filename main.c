@@ -34,9 +34,7 @@
 /****************************************************************************/
 // Optional features
 #define CONFIGURE_PDOS  1
-#define EXTERNAL_MEMORY 1
 //#define SDO_ACCESS      1
-#define VOE_ACCESS      0
 
 // Timing parameter
 #define CYCLE_FREQ 1000
@@ -150,10 +148,6 @@ static ec_sync_info_t rtelligent_syncs[] = {
 static ec_sdo_request_t *sdo_2006;
 #endif
 
-#if VOE_ACCESS
-static ec_voe_handler_t *voe;
-#endif
-
 /*****************************************************************************/
 
 void signal_handler(int signo)
@@ -217,7 +211,7 @@ void cyclic_task()
 	int long ret;
 
     struct timespec wakeupTime, time;
-#ifdef MEASURE_TIMING
+#ifdef CALC_TIMING
     struct timespec startTime, endTime, lastStartTime = {};
     uint32_t period_ns = 0, exec_ns = 0, latency_ns = 0,
              latency_min_ns = 0, latency_max_ns = 0,
@@ -247,7 +241,7 @@ void cyclic_task()
         ecrt_master_application_time(master, TIMESPEC2NS(wakeupTime));
 
 
-#ifdef MEASURE_TIMING
+#ifdef CALC_TIMING
         clock_gettime(CLOCK_SOURCE, &startTime);
         latency_ns = DIFF_NS(wakeupTime, startTime);
         period_ns = DIFF_NS(lastStartTime, startTime);
@@ -309,7 +303,7 @@ void cyclic_task()
             // check for master state (optional)
             //check_master_state(); deleteme
 
-#ifdef MEASURE_TIMING
+#ifdef CALC_TIMING
             // output timing stats
 //            printf("period     %10u ... %10u\n",
 //                    period_min_ns, period_max_ns);
@@ -359,7 +353,7 @@ void cyclic_task()
         ecrt_domain_queue(domain1);
         ecrt_master_send(master);
 
-#ifdef MEASURE_TIMING
+#ifdef CALC_TIMING
         clock_gettime(CLOCK_SOURCE, &endTime);
 #endif
 #ifdef PIGPIO_OUT
