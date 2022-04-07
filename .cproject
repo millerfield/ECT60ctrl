@@ -15,7 +15,7 @@
 				</extensions>
 			</storageModule>
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-				<configuration artifactName="${ProjName}" buildArtefactType="cmake4eclipse.mbs.buildArtefactType.cmake" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=cmake4eclipse.mbs.buildArtefactType.cmake,org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug" description="" id="cmake4eclipse.mbs.config.debug.1742868360" name="Debug" optionalBuildProperties="org.eclipse.cdt.docker.launcher.containerbuild.property.selectedvolumes=,org.eclipse.cdt.docker.launcher.containerbuild.property.volumes=,org.eclipse.cdt.docker.launcher.containerbuild.property.connection=unix:///var/run/docker.sock" parent="cmake4eclipse.mbs.config.debug">
+				<configuration artifactName="${ProjName}" buildArtefactType="cmake4eclipse.mbs.buildArtefactType.cmake" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=cmake4eclipse.mbs.buildArtefactType.cmake,org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug" description="" id="cmake4eclipse.mbs.config.debug.1742868360" name="Debug" optionalBuildProperties="org.eclipse.cdt.docker.launcher.containerbuild.property.volumes=,org.eclipse.cdt.docker.launcher.containerbuild.property.connection=unix:///var/run/docker.sock,org.eclipse.cdt.docker.launcher.containerbuild.property.selectedvolumes=" parent="cmake4eclipse.mbs.config.debug">
 					<folderInfo id="cmake4eclipse.mbs.config.debug.1742868360." name="/" resourcePath="">
 						<toolChain id="cmake4eclipse.mbs.config.debug.toolChain.1693930528" name="CMake driven" nonInternalBuilderId="cmake4eclipse.mbs.builder" superClass="cmake4eclipse.mbs.config.debug.toolChain">
 							<targetPlatform id="cmake4eclipse.mbs.targetPlatform.cmake.439547589" name="Any Platform" superClass="cmake4eclipse.mbs.targetPlatform.cmake"/>
@@ -28,10 +28,11 @@
 					</folderInfo>
 				</configuration>
 			</storageModule>
-			<storageModule buildDir="_build/${ConfigName}" dirtyTs="1649341505224" moduleId="de.marw.cmake4eclipse.mbs.settings">
+			<storageModule buildDir="_build/${ConfigName}" dirtyTs="1649354890005" moduleId="de.marw.cmake4eclipse.mbs.settings">
 				<options/>
 				<defs>
 					<def name="CMAKE_TOOLCHAIN_FILE" type="STRING" val="armhf.cmake"/>
+					<def name="CMAKE_BUILD_TYPE" type="STRING" val="Debug"/>
 				</defs>
 			</storageModule>
 			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>

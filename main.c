@@ -1,31 +1,19 @@
-/*****************************************************************************
+/*
+ * This file is part of ECT60ctrl (https://github.com/millerfield/ECT60ctrl).
+ * Copyright (c) 2022 Stephan Meyer.
  *
- *  $Id$
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
  *
- *  Copyright (C) 2007-2009  Florian Pose, Ingenieurgemeinschaft IgH
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
  *
- *  This file is part of the IgH EtherCAT Master.
- *
- *  The IgH EtherCAT Master is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License version 2, as
- *  published by the Free Software Foundation.
- *
- *  The IgH EtherCAT Master is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General
- *  Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with the IgH EtherCAT Master; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
- ****************************************************************************/
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #include <errno.h>
 #include <signal.h>
@@ -77,27 +65,16 @@
 
 // EtherCAT
 static ec_master_t *master = NULL;
-
 static ec_domain_t *domain1 = NULL;
-static ec_domain_state_t domain1_state = {};
-
 static ec_slave_config_t *sc_ECT60_config = NULL;
-static ec_slave_config_state_t sc_ECT60_state = {};
-
-//static signed int long velocity;
 static t_queue_data queue_data;
-
-static signed char mode_of_operation;
 static unsigned int digout;
-
 static pthread_mutex_t mymutex;
 static pthread_cond_t mycondition;
 static mqd_t myqueue;
 int long curmessages;
 
-#define myqueue_name "/myqueue"
 #define MAXMSG 10
-//#define MSGSIZE 5
 
 /****************************************************************************/
 
@@ -214,31 +191,6 @@ struct timespec timespec_add(struct timespec time1, struct timespec time2)
     }
 
     return result;
-}
-
-/*****************************************************************************/
-
-
-/*****************************************************************************/
-
-
-/****************************************************************************/
-
-void check_slave_config_states(void)
-{
-    ec_slave_config_state_t s;
-
-    ecrt_slave_config_state(sc_ECT60_config, &s);
-
-    if (s.al_state != sc_ECT60_state.al_state)
-        printf("AnaIn: State 0x%02X.\n", s.al_state);
-    if (s.online != sc_ECT60_state.online)
-        printf("AnaIn: %s.\n", s.online ? "online" : "offline");
-    if (s.operational != sc_ECT60_state.operational)
-        printf("AnaIn: %soperational.\n",
-                s.operational ? "" : "Not ");
-
-    sc_ECT60_state = s;
 }
 
 /*****************************************************************************/
@@ -435,6 +387,7 @@ int main(int argc, char **argv)
 {
 	// open a message queue for communication between threads
 	struct mq_attr attr = {.mq_flags = 0, .mq_maxmsg = MAXMSG, .mq_msgsize = sizeof(t_queue_data)+1, .mq_curmsgs = 0};
+#define myqueue_name "/myqueue"
 	myqueue = mq_open(myqueue_name, O_WRONLY | O_CREAT | O_NONBLOCK, 0660, &attr);
 	// Init the mutex for safe interthread communication
 	pthread_mutex_init(&mymutex, NULL);

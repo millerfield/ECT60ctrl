@@ -1,17 +1,17 @@
-/* 
- * This file is part of the XXX distribution (https://github.com/xxxx or http://xxx.github.io).
+/*
+ * This file is part of ECT60ctrl (https://github.com/millerfield/ECT60ctrl).
  * Copyright (c) 2022 Stephan Meyer.
- * 
- * This program is free software: you can redistribute it and/or modify  
- * it under the terms of the GNU General Public License as published by  
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, version 3.
  *
- * This program is distributed in the hope that it will be useful, but 
- * WITHOUT ANY WARRANTY; without even the implied warranty of 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU 
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License 
+ * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
@@ -28,7 +28,6 @@
 #endif
 
 #define NCURSES_GUI
-//#define MSGSIZE 5
 
 
 
@@ -82,7 +81,6 @@ void print_domain1_state(WINDOW* win, int curs_y, int curs_x)
 void* ncurses_gui(void* arg)
 {
 	int ymax, xmax;
-	//int long velocity;
 	struct mq_attr attr;
 	signed char mode_of_operation;
 	t_queue_data queue_data;
@@ -184,7 +182,10 @@ void ncurses_gui_init(ec_master_t* pmaster, ec_domain_t* pdomain, uint8_t *pdoma
 
 void ncurses_gui_deinit(void)
 {
-	endwin();
+    // Remove queue
+    mq_close(myqueue);
+    // Close ncurses window
+    endwin();
 }
 
 

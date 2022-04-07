@@ -7,10 +7,14 @@ sudo apt-get install libpigpio-dev libpigpio1 libncurses-dev
 Check if user who is running the application is in group root.
 
 ## Build:
+The application can be build natively on the target or by the help of a cross build environemnt.
+For cross building the application, the root filesystem of the target must be mounted to the user directory.
+In any case adjust the variable CMAKE_SYSROOT in the toolchain file armhf.cmake to the root filesystem. A native target build requires '/'.
+The cmake call needs two cache variables for the build type (Release or Debug) and for the toolchain file as argument. 
 ```
-mkdir build
-cd build
-cmake .. -DCMAKE_PREFIX_PATH=/usr/local/lib -DCMAKE_BUILD_TYPE:STRING=Debug -DCMAKE_TOOLCHAIN_FILE:STRING=armhf.cmake
+mkdir _build/Debug
+cd _build/Debug
+cmake .. -DCMAKE_BUILD_TYPE:STRING=Debug -DCMAKE_TOOLCHAIN_FILE:STRING=armhf.cmake
 make
 ```
 
