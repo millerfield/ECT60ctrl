@@ -16,20 +16,13 @@
  */
 
 #include <errno.h>
+#include <mqueue.h>
+#include <pthread.h>
+#include <sched.h> /* sched_setscheduler() */
 #include <signal.h>
 #include <stdio.h>
 #include <string.h>
-#include <sys/resource.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <mqueue.h>
-#include <unistd.h>
-#include <time.h>
 #include <sys/mman.h>
-#include <malloc.h>
-#include <sched.h> /* sched_setscheduler() */
-#include <errno.h>
-#include <pthread.h>
 
 /****************************************************************************/
 
@@ -45,16 +38,15 @@
 //#define SDO_ACCESS      1
 #define VOE_ACCESS      0
 
-// Application parameters
-#define FREQUENCY 1000
-#define CLOCK_TO_USE CLOCK_MONOTONIC
-#define MEASURE_TIMING
-#define NCURSES_GUI
+// Timing parameter
+#define CYCLE_FREQ 1000
+#define CLOCK_SOURCE CLOCK_MONOTONIC
+#define CALC_TIMING
 
 /****************************************************************************/
 
 #define NSEC_PER_SEC (1000000000L)
-#define PERIOD_NS (NSEC_PER_SEC / FREQUENCY)
+#define PERIOD_NS (NSEC_PER_SEC / CYCLE_FREQ)
 
 #define DIFF_NS(A, B) (((B).tv_sec - (A).tv_sec) * NSEC_PER_SEC + \
         (B).tv_nsec - (A).tv_nsec)
@@ -234,13 +226,13 @@ void cyclic_task()
 #endif
 
     // get current time
-    clock_gettime(CLOCK_TO_USE, &wakeupTime);
+    clock_gettime(CLOCK_SOURCE, &wakeupTime);
 
     while(1) {
 
 
     	wakeupTime = timespec_add(wakeupTime, cycletime);
-        clock_nanosleep(CLOCK_TO_USE, TIMER_ABSTIME, &wakeupTime, NULL);
+        clock_nanosleep(CLOCK_SOURCE, TIMER_ABSTIME, &wakeupTime, NULL);
 
 #ifdef PIGPIO_OUT
         // Enable GPIO14
@@ -256,7 +248,7 @@ void cyclic_task()
 
 
 #ifdef MEASURE_TIMING
-        clock_gettime(CLOCK_TO_USE, &startTime);
+        clock_gettime(CLOCK_SOURCE, &startTime);
         latency_ns = DIFF_NS(wakeupTime, startTime);
         period_ns = DIFF_NS(lastStartTime, startTime);
         exec_ns = DIFF_NS(lastStartTime, endTime);
@@ -312,7 +304,7 @@ void cyclic_task()
         if (counter) {
             counter--;
         } else { // do this at 1 Hz
-            counter = FREQUENCY;
+            counter = CYCLE_FREQ;
 
             // check for master state (optional)
             //check_master_state(); deleteme
@@ -358,7 +350,7 @@ void cyclic_task()
         } else {
             sync_ref_counter = 1; // sync every cycle
 
-            clock_gettime(CLOCK_TO_USE, &time);
+            clock_gettime(CLOCK_SOURCE, &time);
             ecrt_master_sync_reference_clock_to(master, TIMESPEC2NS(time));
         }
         ecrt_master_sync_slave_clocks(master);
@@ -368,7 +360,7 @@ void cyclic_task()
         ecrt_master_send(master);
 
 #ifdef MEASURE_TIMING
-        clock_gettime(CLOCK_TO_USE, &endTime);
+        clock_gettime(CLOCK_SOURCE, &endTime);
 #endif
 #ifdef PIGPIO_OUT
         // Disable GPIO14

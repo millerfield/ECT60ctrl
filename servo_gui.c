@@ -17,10 +17,10 @@
 
 
 #include <unistd.h>
-#include "curses.h"
+#include <curses.h>
 #include <pthread.h>
 #include <mqueue.h>
-#include "ecrt.h"
+#include <ecrt.h>
 #include <errno.h>
 #include "servo_gui.h"
 #ifdef PIGPIO_OUT
@@ -69,11 +69,13 @@ void print_domain1_state(WINDOW* win, int curs_y, int curs_x)
 
     ecrt_domain_state(domain, &ds);
 
+    // Compare states with state from n-1 request and print if changed
     if (ds.working_counter != domain_state.working_counter)
         mvwprintw(win, curs_y, curs_x, "Domain1: WC %u.", ds.working_counter);
     if (ds.wc_state != domain_state.wc_state)
     	mvwprintw(win, curs_y + 1, curs_x, "Domain1: State %u.", ds.wc_state);
 
+    // Store state persistent
     domain_state = ds;
 }
 
