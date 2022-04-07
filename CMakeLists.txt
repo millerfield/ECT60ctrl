@@ -8,10 +8,9 @@ project(ECT60ctrl
 	LANGUAGES C 
 )
 
-
+find_package(Curses REQUIRED)
 find_package(EtherCAT REQUIRED)
 find_package(Threads REQUIRED)
-
 
 set(SOURCE main.c servo_gui.c)
 set(NAME_EXE ECT60ctrl)
@@ -20,8 +19,8 @@ add_executable(${NAME_EXE} ${SOURCE})
 
 
 target_link_libraries(${NAME_EXE}
-	PRIVATE ethercat
-	PRIVATE ncurses 
+	PRIVATE EtherLab::EtherCAT
+	PRIVATE ${CURSES_LIBRARY} 
 	PRIVATE pthread
 	PRIVATE rt)
 
