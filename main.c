@@ -63,7 +63,7 @@ static pthread_mutex_t mymutex;
 static pthread_cond_t mycondition;
 static mqd_t myqueue;
 int long curmessages;
-
+int long velocity_setpoint;
 #define MAXMSG 10
 
 /****************************************************************************/
@@ -277,6 +277,8 @@ void cyclic_task()
         //************** lock queue ***********************//
         // Lock mutex
         pthread_mutex_lock(&mymutex);
+        // Write velocity setpoint
+	    EC_WRITE_S32(domain1_pd + CiA402_reg60ff, velocity_setpoint);
         // Read velocity from ethercat TX-PDO's
         queue_data.velocity = EC_READ_S32((void*)(domain1_pd + CiA402_reg606c));
         // Read setpoint velocity from RX-PDO's
@@ -334,7 +336,7 @@ void cyclic_task()
 	    EC_WRITE_U8(domain1_pd + CiA402_reg6060, 0x3);
 	    EC_WRITE_S32(domain1_pd + CiA402_reg6083, 0xa000);
 	    EC_WRITE_S32(domain1_pd + CiA402_reg6084, 0xa000);
-	    EC_WRITE_S32(domain1_pd + CiA402_reg60ff, 0x1000);
+	    // EC_WRITE_S32(domain1_pd + CiA402_reg60ff, 0x1000);
 
 	    {
 		    digout = EC_READ_U16((void*)(domain1_pd  + CiA402_reg2006));

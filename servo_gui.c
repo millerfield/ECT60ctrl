@@ -42,6 +42,7 @@ static pthread_mutex_t* mymutex;
 static mqd_t myqueue;
 static pthread_cond_t* mycondition;
 extern long int curmessages;
+extern int long velocity_setpoint;
 WINDOW *win;
 
 void print_master_state(WINDOW* win, int curs_y, int curs_x)
@@ -138,7 +139,7 @@ void* ncurses_gui(void* arg)
         // and store into the shared variable
        	curmessages = attr.mq_curmsgs;
        	// Write TX PDO's via global
-
+       	velocity_setpoint = 8000;
        	// Unlock mutex
        	pthread_mutex_unlock(mymutex);
         //************** unlock queue ***********************//
@@ -150,10 +151,10 @@ void* ncurses_gui(void* arg)
 		// print out latest process data
 		//print_master_state(win, 12, 10);
 		//print_domain1_state(win, 15, 10);
-    	mvwprintw(win, 10, 10, "Expected velocity: %ld", queue_data.velocity_setpoint);
-    	mvwprintw(win, 11, 10, "Actual velocity: %ld", queue_data.velocity);
-    	mvwprintw(win, 12, 10, "Variance: %ld", queue_data.velocity);
-    	mvwprintw(win, 13, 10, "Mode of operation: %d", queue_data.mode_of_operation);
+    	mvwprintw(win, 10, 10, "Expected velocity: %5ld", queue_data.velocity_setpoint);
+    	mvwprintw(win, 11, 10, "Actual velocity: %5ld", queue_data.velocity);
+    	mvwprintw(win, 12, 10, "Variance: %5ld", queue_data.velocity);
+    	mvwprintw(win, 13, 10, "Mode of operation: %1d", queue_data.mode_of_operation);
 		wrefresh(win);
 	}
 	endwin();
