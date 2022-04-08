@@ -281,7 +281,9 @@ void cyclic_task()
         queue_data.velocity = EC_READ_S32((void*)(domain1_pd + CiA402_reg606c));
         // Read setpoint velocity from RX-PDO's
         queue_data.velocity_setpoint = EC_READ_S32((void*)(domain1_pd + CiA402_reg60ff));
-        // Send velocity over message queue to gui thread
+        // Read mode of operation from TX-PDO's
+        queue_data.mode_of_operation = EC_READ_S8((void*)(domain1_pd + CiA402_reg6061));
+        // Send data over message queue to gui thread
         ret = mq_send(myqueue, (const char *)&queue_data, sizeof(t_queue_data)+1, 0);
         {	// read number of current messages in queue
         	struct mq_attr attr;

@@ -12,6 +12,7 @@ typedef struct
 {
 	int long velocity;
 	int long velocity_setpoint;
+	char mode_of_operation;
 }t_queue_data;
 
 void ncurses_gui_init(ec_master_t*, ec_domain_t*, uint8_t *, pthread_mutex_t*, pthread_cond_t*);

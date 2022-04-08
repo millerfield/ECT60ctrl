@@ -131,11 +131,14 @@ void* ncurses_gui(void* arg)
 #endif
             }
        	// Comming here if queue is not empty triggered by signal from main thread
+        // Receive RX PDO's via queue
         mq_receive(myqueue, (char *)&queue_data, sizeof(t_queue_data)+1, 0);
         // Get actual number of messages from queue
         mq_getattr(myqueue, &attr);
         // and store into the shared variable
        	curmessages = attr.mq_curmsgs;
+       	// Write TX PDO's via global
+
        	// Unlock mutex
        	pthread_mutex_unlock(mymutex);
         //************** unlock queue ***********************//
@@ -147,11 +150,10 @@ void* ncurses_gui(void* arg)
 		// print out latest process data
 		//print_master_state(win, 12, 10);
 		//print_domain1_state(win, 15, 10);
-		//mode_of_operation = EC_READ_S8((void*)(domain_pd + CiA402_reg6061));
-//		mvwprintw(win, 11, 10, "Mode of operation: %d", mode_of_operation);
     	mvwprintw(win, 10, 10, "Expected velocity: %ld", queue_data.velocity_setpoint);
     	mvwprintw(win, 11, 10, "Actual velocity: %ld", queue_data.velocity);
     	mvwprintw(win, 12, 10, "Variance: %ld", queue_data.velocity);
+    	mvwprintw(win, 13, 10, "Mode of operation: %d", queue_data.mode_of_operation);
 		wrefresh(win);
 	}
 	endwin();
