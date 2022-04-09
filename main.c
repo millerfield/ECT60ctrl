@@ -57,13 +57,13 @@
 static ec_master_t *master = NULL;
 static ec_domain_t *domain1 = NULL;
 static ec_slave_config_t *sc_ECT60_config = NULL;
-static t_queue_data queue_data;
+static txpdo_queue_data_t txpdo_queue_data;
 static unsigned int digout;
 static pthread_mutex_t mymutex;
 static pthread_cond_t mycondition;
 static mqd_t myqueue;
 int long curmessages;
-int long velocity_setpoint;
+rxpdo_queue_data_t rxpdo_queue_data;
 #define MAXMSG 10
 
 /****************************************************************************/
@@ -278,15 +278,15 @@ void cyclic_task()
         // Lock mutex
         pthread_mutex_lock(&mymutex);
         // Write velocity setpoint
-	    EC_WRITE_S32(domain1_pd + CiA402_reg60ff, velocity_setpoint);
+	    EC_WRITE_S32(domain1_pd + CiA402_reg60ff, rxpdo_queue_data.velocity_setpoint);
         // Read velocity from ethercat TX-PDO's
-        queue_data.velocity = EC_READ_S32((void*)(domain1_pd + CiA402_reg606c));
+        txpdo_queue_data.velocity = EC_READ_S32((void*)(domain1_pd + CiA402_reg606c));
         // Read setpoint velocity from RX-PDO's
-        queue_data.velocity_setpoint = EC_READ_S32((void*)(domain1_pd + CiA402_reg60ff));
+        rxpdo_queue_data.velocity_setpoint = EC_READ_S32((void*)(domain1_pd + CiA402_reg60ff));
         // Read mode of operation from TX-PDO's
-        queue_data.mode_of_operation = EC_READ_S8((void*)(domain1_pd + CiA402_reg6061));
+        txpdo_queue_data.mode_of_operation = EC_READ_S8((void*)(domain1_pd + CiA402_reg6061));
         // Send data over message queue to gui thread
-        ret = mq_send(myqueue, (const char *)&queue_data, sizeof(t_queue_data)+1, 0);
+        ret = mq_send(myqueue, (const char *)&txpdo_queue_data, sizeof(txpdo_queue_data_t)+1, 0);
         {	// read number of current messages in queue
         	struct mq_attr attr;
         	mq_getattr(myqueue, &attr);
@@ -376,7 +376,7 @@ void cyclic_task()
 int main(int argc, char **argv)
 {
 	// open a message queue for communication between threads
-	struct mq_attr attr = {.mq_flags = 0, .mq_maxmsg = MAXMSG, .mq_msgsize = sizeof(t_queue_data)+1, .mq_curmsgs = 0};
+	struct mq_attr attr = {.mq_flags = 0, .mq_maxmsg = MAXMSG, .mq_msgsize = sizeof(txpdo_queue_data_t)+1, .mq_curmsgs = 0};
 #define myqueue_name "/myqueue"
 	myqueue = mq_open(myqueue_name, O_WRONLY | O_CREAT | O_NONBLOCK, 0660, &attr);
 	// Init the mutex for safe interthread communication

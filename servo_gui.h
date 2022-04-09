@@ -8,12 +8,18 @@
 #ifndef EXAMPLES_DC_RTELLIGENT_SERVO_GUI_H_
 #define EXAMPLES_DC_RTELLIGENT_SERVO_GUI_H_
 
+// Data type send from cyclic_task via queue to ncurses_gui task
 typedef struct
 {
 	int long velocity;
-	int long velocity_setpoint;
 	char mode_of_operation;
-}t_queue_data;
+}txpdo_queue_data_t;
+
+// Data type send from ncurses_gui task to cyclic_task (no queue)
+typedef struct
+{
+	int long velocity_setpoint;
+}rxpdo_queue_data_t;
 
 void ncurses_gui_init(ec_master_t*, ec_domain_t*, uint8_t *, pthread_mutex_t*, pthread_cond_t*);
 
