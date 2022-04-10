@@ -80,35 +80,10 @@ void print_domain1_state(WINDOW* win, int curs_y, int curs_x)
     domain_state = ds;
 }
 
-
-void* ncurses_gui(void* arg)
+// Function for exchanging data with the real time cyclic_task of ethercat
+void exchange_data(txpdo_queue_data_t* p_txdata, rxpdo_queue_data_t* p_rxdata)
 {
-	int ymax, xmax;
 	struct mq_attr attr;
-	signed char mode_of_operation;
-	txpdo_queue_data_t txpdo_queue_data;
-
-    struct sched_param param = {};
-    param.sched_priority = sched_get_priority_max(SCHED_FIFO)-1;
-
-    printf("Using priority %i.\n", param.sched_priority);
-    if (sched_setscheduler(0, SCHED_FIFO, &param) == -1) {
-        perror("sched_setscheduler failed\n");
-    }
-
-	initscr();
-	noecho();
-	curs_set(0);
-
-	getmaxyx(stdscr, ymax, xmax);
-
-	win = newwin(ymax-2, xmax-2, 1, 1);
-	refresh();
-	box(win, 0, 0);
-
-	while(1)
-	{
-		int i;
 
 #ifdef PIGPIO_OUT
                 // Enable GPIO15
@@ -132,13 +107,13 @@ void* ncurses_gui(void* arg)
             }
        	// Comming here if queue is not empty triggered by signal from main thread
         // Receive RX PDO's via queue
-        mq_receive(myqueue, (char *)&txpdo_queue_data, sizeof(txpdo_queue_data_t)+1, 0);
+        mq_receive(myqueue, (char *)p_txdata, sizeof(txpdo_queue_data_t)+1, 0);
         // Get actual number of messages from queue
         mq_getattr(myqueue, &attr);
         // and store into the shared variable
        	curmessages = attr.mq_curmsgs;
        	// Write TX PDO's via global
-       	rxpdo_queue_data.velocity_setpoint = 80000;
+       	rxpdo_queue_data.velocity_setpoint = p_rxdata->velocity_setpoint;
        	// Unlock mutex
        	pthread_mutex_unlock(mymutex);
         //************** unlock queue ***********************//
@@ -147,13 +122,64 @@ void* ncurses_gui(void* arg)
         		gpioWrite(15, 0);
 #endif
 
+}
+
+
+void* ncurses_gui(void* arg)
+{
+	char ret;
+	int ymax, xmax;
+	int long velocity_setpoint;
+	signed char mode_of_operation;
+	txpdo_queue_data_t txpdo_data = {0};
+	rxpdo_queue_data_t rxpdo_data = {0};
+    struct sched_param param = {};
+    param.sched_priority = sched_get_priority_max(SCHED_FIFO)-1;
+
+    printf("Using priority %i.\n", param.sched_priority);
+    if (sched_setscheduler(0, SCHED_FIFO, &param) == -1) {
+        perror("sched_setscheduler failed\n");
+    }
+
+	initscr();
+	noecho();
+	curs_set(0);
+
+	getmaxyx(stdscr, ymax, xmax);
+
+	win = newwin(ymax-2, xmax-2, 1, 1);
+	if (nodelay (win, true) == ERR) {
+	    // some error occurred.
+	}
+
+	refresh();
+	box(win, 0, 0);
+	timeout(0);
+
+	while(1)
+	{
+		// Exchange data with the ethercat realtime thread
+		exchange_data(&txpdo_data, &rxpdo_data);
+
+        ret = getch();	// Get char from keyboard buffer non blocking
+
+        if(ret == 'a')
+        {
+        	rxpdo_data.velocity_setpoint += 1000;
+        }
+        else if(ret == 'd')
+        {
+        	rxpdo_data.velocity_setpoint -= 1000;
+        }
+
+
 		// print out latest process data
 		//print_master_state(win, 12, 10);
 		//print_domain1_state(win, 15, 10);
-    	mvwprintw(win, 10, 10, "Expected velocity: %5ld", rxpdo_queue_data.velocity_setpoint);
-    	mvwprintw(win, 11, 10, "Actual velocity: %5ld", txpdo_queue_data.velocity);
-    	mvwprintw(win, 12, 10, "Variance: %5ld", txpdo_queue_data.velocity);
-    	mvwprintw(win, 13, 10, "Mode of operation: %1d", txpdo_queue_data.mode_of_operation);
+    	mvwprintw(win, 10, 10, "Expected velocity: %6ld", rxpdo_data.velocity_setpoint);
+    	mvwprintw(win, 11, 10, "Actual velocity: %6ld", txpdo_data.velocity);
+    	mvwprintw(win, 12, 10, "Variance: %6ld", txpdo_data.velocity);
+    	mvwprintw(win, 13, 10, "Mode of operation: %1d", txpdo_data.mode_of_operation);
 		wrefresh(win);
 	}
 	endwin();
