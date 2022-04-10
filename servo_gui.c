@@ -124,16 +124,15 @@ void exchange_data(txpdo_queue_data_t* p_txdata, rxpdo_queue_data_t* p_rxdata)
 
 }
 
-
+// This function is not allowed to contain a blocking call except exchange_data()
 void* ncurses_gui(void* arg)
 {
-	char ret;
+	int keypressed;
 	int ymax, xmax;
-	int long velocity_setpoint;
-	signed char mode_of_operation;
 	txpdo_queue_data_t txpdo_data = {0};
 	rxpdo_queue_data_t rxpdo_data = {0};
     struct sched_param param = {};
+    // The scheduler priority of this thread is set to the highest possible -1.
     param.sched_priority = sched_get_priority_max(SCHED_FIFO)-1;
 
     printf("Using priority %i.\n", param.sched_priority);
@@ -142,15 +141,19 @@ void* ncurses_gui(void* arg)
     }
 
 	initscr();
+	cbreak();
 	noecho();
 	curs_set(0);
 
 	getmaxyx(stdscr, ymax, xmax);
 
 	win = newwin(ymax-2, xmax-2, 1, 1);
+	// Set for getch() non blocking
 	if (nodelay (win, true) == ERR) {
 	    // some error occurred.
 	}
+	// Turn arrow keys on
+	keypad(win, true);
 
 	refresh();
 	box(win, 0, 0);
@@ -158,16 +161,17 @@ void* ncurses_gui(void* arg)
 
 	while(1)
 	{
-		// Exchange data with the ethercat realtime thread
+		// Exchange data with the ethercat realtime thread. This is synched with a condition from the real time thread and is a blocking call.
 		exchange_data(&txpdo_data, &rxpdo_data);
 
-        ret = getch();	// Get char from keyboard buffer non blocking
+		// Get char from keyboard buffer non blocking
+		keypressed = wgetch(win);
 
-        if(ret == 'a')
+        if(keypressed == KEY_UP)
         {
         	rxpdo_data.velocity_setpoint += 1000;
         }
-        else if(ret == 'd')
+        else if(keypressed == KEY_DOWN)
         {
         	rxpdo_data.velocity_setpoint -= 1000;
         }
@@ -176,9 +180,9 @@ void* ncurses_gui(void* arg)
 		// print out latest process data
 		//print_master_state(win, 12, 10);
 		//print_domain1_state(win, 15, 10);
-    	mvwprintw(win, 10, 10, "Expected velocity: %6ld", rxpdo_data.velocity_setpoint);
-    	mvwprintw(win, 11, 10, "Actual velocity: %6ld", txpdo_data.velocity);
-    	mvwprintw(win, 12, 10, "Variance: %6ld", txpdo_data.velocity);
+    	mvwprintw(win, 10, 10, "Expected velocity: %7ld", rxpdo_data.velocity_setpoint);
+    	mvwprintw(win, 11, 10, "Actual velocity: %7ld", txpdo_data.velocity);
+    	mvwprintw(win, 12, 10, "Variance: %7ld", txpdo_data.velocity);
     	mvwprintw(win, 13, 10, "Mode of operation: %1d", txpdo_data.mode_of_operation);
 		wrefresh(win);
 	}

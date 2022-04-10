@@ -459,6 +459,7 @@ int main(int argc, char **argv)
     /* Set priority */
 
     struct sched_param param = {};
+    // The scheduler priority of this thread is set to the highest possible.
     param.sched_priority = sched_get_priority_max(SCHED_FIFO);
 
     printf("Using priority %i.\n", param.sched_priority);
