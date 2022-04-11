@@ -43,7 +43,7 @@ static mqd_t myqueue;
 static pthread_cond_t* mycondition;
 extern long int curmessages;
 extern rxpdo_queue_data_t rxpdo_queue_data;
-WINDOW *win;
+WINDOW *win_ethcat, *win_cia402;
 
 void print_master_state(WINDOW* win, int curs_y, int curs_x)
 {
@@ -145,18 +145,36 @@ void* ncurses_gui(void* arg)
 	noecho();
 	curs_set(0);
 
+	if(!has_colors())
+	{
+		printw("terminal does not support colors");
+	}
 	getmaxyx(stdscr, ymax, xmax);
 
-	win = newwin(ymax-2, xmax-2, 1, 1);
+	win_ethcat = newwin((ymax/2)-2, (xmax/2)-2, 1, 1);
+	win_cia402 = newwin((ymax/2)-2, (xmax/2)-2, 1, xmax/2);
 	// Set for getch() non blocking
-	if (nodelay (win, true) == ERR) {
+	if (nodelay (win_ethcat, true) == ERR) {
+	    // some error occurred.
+	}
+	if (nodelay (win_cia402, true) == ERR) {
 	    // some error occurred.
 	}
 	// Turn arrow keys on
-	keypad(win, true);
+	keypad(win_ethcat, true);
+	keypad(win_cia402, true);
 
-	refresh();
-	box(win, 0, 0);
+	box(win_ethcat, 0, 0);
+	box(win_cia402, 0, 0);
+	wattron(win_ethcat, A_STANDOUT | A_BOLD);
+	mvwprintw(win_ethcat, 0, 1, "EtherCAT");
+	wattroff(win_ethcat, A_STANDOUT | A_BOLD);
+	wattron(win_cia402, A_STANDOUT | A_BOLD);
+	mvwprintw(win_cia402, 0, 1, "CIA402");
+	wattroff(win_cia402, A_STANDOUT | A_BOLD);
+	wrefresh(win_ethcat);
+	wrefresh(win_cia402);
+
 	timeout(0);
 
 	while(1)
@@ -165,7 +183,7 @@ void* ncurses_gui(void* arg)
 		exchange_data(&txpdo_data, &rxpdo_data);
 
 		// Get char from keyboard buffer non blocking
-		keypressed = wgetch(win);
+		keypressed = wgetch(win_ethcat);
 
         if(keypressed == KEY_UP)
         {
@@ -178,13 +196,14 @@ void* ncurses_gui(void* arg)
 
 
 		// print out latest process data
-		//print_master_state(win, 12, 10);
-		//print_domain1_state(win, 15, 10);
-    	mvwprintw(win, 10, 10, "Expected velocity: %7ld", rxpdo_data.velocity_setpoint);
-    	mvwprintw(win, 11, 10, "Actual velocity: %7ld", txpdo_data.velocity);
-    	mvwprintw(win, 12, 10, "Variance: %7ld", txpdo_data.velocity);
-    	mvwprintw(win, 13, 10, "Mode of operation: %1d", txpdo_data.mode_of_operation);
-		wrefresh(win);
+		print_master_state(win_ethcat, 1, 2);
+		//print_domain1_state(win_ethcat, 15, 10);
+		mvwprintw(win_cia402, 1, 2, "Expected velocity: %7ld", rxpdo_data.velocity_setpoint);
+    	mvwprintw(win_cia402, 2, 2, "Actual velocity: %7ld", txpdo_data.velocity);
+    	mvwprintw(win_cia402, 3, 2, "Variance: %7ld", txpdo_data.velocity);
+    	mvwprintw(win_cia402, 4, 2, "Mode of operation: %1d", txpdo_data.mode_of_operation);
+		wrefresh(win_ethcat);
+		wrefresh(win_cia402);
 	}
 	endwin();
 
