@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-
+#include <stdbool.h>
 #include <errno.h>
 #include <mqueue.h>
 #include <pthread.h>
@@ -63,6 +63,7 @@ static pthread_mutex_t mymutex;
 static pthread_cond_t mycondition;
 static mqd_t myqueue;
 int long curmessages;
+bool winch_required = false;
 rxpdo_queue_data_t rxpdo_queue_data;
 #define MAXMSG 10
 
@@ -152,13 +153,29 @@ static ec_sdo_request_t *sdo_2006;
 
 void signal_handler(int signo)
 {
-  if (signo == SIGINT)
-    printf("received SIGINT %d\n", signo);
-  else if (signo == SIGTERM)
-    printf("received SIGTERM %d\n", signo);
 
-  ncurses_gui_deinit();
-  exit(0);
+	switch(signo)
+	{
+	case(SIGINT):
+	  {
+		printf("received SIGINT %d\n", signo);
+		ncurses_gui_deinit();
+		exit(0);
+		break;
+	  }
+	case(SIGTERM):
+	  {
+		printf("received SIGTERM %d\n", signo);
+		ncurses_gui_deinit();
+		exit(0);
+		break;
+	  }
+	case(SIGWINCH):
+		  winch_required = true;
+		break;
+	default:
+		break;
+	}
   return;
 }
 
@@ -386,7 +403,7 @@ int main(int argc, char **argv)
 	int pigpio_version;
 #endif
 
-	if ((signal(SIGINT, signal_handler) == SIG_ERR) || (signal(SIGTERM, signal_handler) == SIG_ERR))
+	if ((signal(SIGINT, signal_handler) == SIG_ERR) || (signal(SIGTERM, signal_handler) == SIG_ERR) || (signal(SIGWINCH, signal_handler) == SIG_ERR) )
 	{
 		perror("signal handler registration failed");
 	}
@@ -455,7 +472,7 @@ int main(int argc, char **argv)
     }
 
     /* Call ncurses gui thread */
-    ncurses_gui_init(master, domain1, domain1_pd, &mymutex, &mycondition);
+    ncurses_gui_start(master, domain1, domain1_pd, &mymutex, &mycondition);
     /* Set priority */
 
     struct sched_param param = {};

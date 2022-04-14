@@ -16,6 +16,7 @@
  */
 
 
+#include <stdbool.h>
 #include <unistd.h>
 #include <curses.h>
 #include <pthread.h>
@@ -43,41 +44,45 @@ static mqd_t myqueue;
 static pthread_cond_t* mycondition;
 extern long int curmessages;
 extern rxpdo_queue_data_t rxpdo_queue_data;
-WINDOW *win_ethcat, *win_cia402;
+extern bool winch_required;
+WINDOW *win_ethcat, *win_cia402, *win_params;
 
-void print_master_state(WINDOW* win, int curs_y, int curs_x)
+void print_master_state(WINDOW* win)
 {
     ec_master_state_t ms;
+    ec_domain_state_t ds;
 
     // Read actual master state
     ecrt_master_state(master, &ms);
+    // Read actual domain
+    ecrt_domain_state(domain, &ds);
+
 
     // Compare states with state from n-1 request and print if changed
     if (ms.slaves_responding != master_state.slaves_responding)
-        mvwprintw(win, curs_y, curs_x, "%u slave(s).", ms.slaves_responding);
+        mvwprintw(win, 1, 2, "%u slave(s).", ms.slaves_responding);
     if (ms.al_states != master_state.al_states)
-    	mvwprintw(win, curs_y + 1, curs_x, "AL states: 0x%02X.", ms.al_states);
+    	mvwprintw(win, 2, 2, "AL states: 0x%02X.", ms.al_states);
     if (ms.link_up != master_state.link_up)
-    	mvwprintw(win, curs_y + 2, curs_x, "Link is %s.", ms.link_up ? "up" : "down");
+    	mvwprintw(win, 3, 2, "Link is %s.", ms.link_up ? "up" : "down");
+    if (ds.working_counter != domain_state.working_counter)
+        mvwprintw(win, 4, 2, "Domain1: WC %u.", ds.working_counter);
+    if (ds.wc_state != domain_state.wc_state)
+    	mvwprintw(win, 5, 2, "Domain1: State %u.", ds.wc_state);
 
-    // Store state persistent
+    // Store states persistent
     master_state = ms;
+    domain_state = ds;
 }
 
-void print_domain1_state(WINDOW* win, int curs_y, int curs_x)
+
+void print_cia402(WINDOW* win, txpdo_queue_data_t* ptxpdo, rxpdo_queue_data_t* prxpdo)
 {
-    ec_domain_state_t ds;
+	mvwprintw(win_cia402, 1, 2, "Expected velocity: %7ld", prxpdo->velocity_setpoint);
+	mvwprintw(win_cia402, 2, 2, "Actual velocity: %7ld", ptxpdo->velocity);
+	mvwprintw(win_cia402, 3, 2, "Variance: %7ld", ptxpdo->velocity);
+	mvwprintw(win_cia402, 4, 2, "Mode of operation: %1d", ptxpdo->mode_of_operation);
 
-    ecrt_domain_state(domain, &ds);
-
-    // Compare states with state from n-1 request and print if changed
-    if (ds.working_counter != domain_state.working_counter)
-        mvwprintw(win, curs_y, curs_x, "Domain1: WC %u.", ds.working_counter);
-    if (ds.wc_state != domain_state.wc_state)
-    	mvwprintw(win, curs_y + 1, curs_x, "Domain1: State %u.", ds.wc_state);
-
-    // Store state persistent
-    domain_state = ds;
 }
 
 // Function for exchanging data with the real time cyclic_task of ethercat
@@ -128,7 +133,6 @@ void exchange_data(txpdo_queue_data_t* p_txdata, rxpdo_queue_data_t* p_rxdata)
 void* ncurses_gui(void* arg)
 {
 	int keypressed;
-	int ymax, xmax;
 	txpdo_queue_data_t txpdo_data = {0};
 	rxpdo_queue_data_t rxpdo_data = {0};
     struct sched_param param = {};
@@ -140,42 +144,8 @@ void* ncurses_gui(void* arg)
         perror("sched_setscheduler failed\n");
     }
 
-	initscr();
-	cbreak();
-	noecho();
-	curs_set(0);
+    ncurses_gui_reinit();
 
-	if(!has_colors())
-	{
-		printw("terminal does not support colors");
-	}
-	getmaxyx(stdscr, ymax, xmax);
-
-	win_ethcat = newwin((ymax/2)-2, (xmax/2)-2, 1, 1);
-	win_cia402 = newwin((ymax/2)-2, (xmax/2)-2, 1, xmax/2);
-	// Set for getch() non blocking
-	if (nodelay (win_ethcat, true) == ERR) {
-	    // some error occurred.
-	}
-	if (nodelay (win_cia402, true) == ERR) {
-	    // some error occurred.
-	}
-	// Turn arrow keys on
-	keypad(win_ethcat, true);
-	keypad(win_cia402, true);
-
-	box(win_ethcat, 0, 0);
-	box(win_cia402, 0, 0);
-	wattron(win_ethcat, A_STANDOUT | A_BOLD);
-	mvwprintw(win_ethcat, 0, 1, "EtherCAT");
-	wattroff(win_ethcat, A_STANDOUT | A_BOLD);
-	wattron(win_cia402, A_STANDOUT | A_BOLD);
-	mvwprintw(win_cia402, 0, 1, "CIA402");
-	wattroff(win_cia402, A_STANDOUT | A_BOLD);
-	wrefresh(win_ethcat);
-	wrefresh(win_cia402);
-
-	timeout(0);
 
 	while(1)
 	{
@@ -195,22 +165,23 @@ void* ncurses_gui(void* arg)
         }
 
 
+        if(winch_required == true)
+        {
+        	ncurses_gui_reinit();
+        }
 		// print out latest process data
-		print_master_state(win_ethcat, 1, 2);
-		//print_domain1_state(win_ethcat, 15, 10);
-		mvwprintw(win_cia402, 1, 2, "Expected velocity: %7ld", rxpdo_data.velocity_setpoint);
-    	mvwprintw(win_cia402, 2, 2, "Actual velocity: %7ld", txpdo_data.velocity);
-    	mvwprintw(win_cia402, 3, 2, "Variance: %7ld", txpdo_data.velocity);
-    	mvwprintw(win_cia402, 4, 2, "Mode of operation: %1d", txpdo_data.mode_of_operation);
+		print_master_state(win_ethcat);
+		print_cia402(win_cia402, &txpdo_data, &rxpdo_data);
 		wrefresh(win_ethcat);
 		wrefresh(win_cia402);
+		wrefresh(win_params);
 	}
 	endwin();
 
 	return NULL;
 }
 
-void ncurses_gui_init(ec_master_t* pmaster, ec_domain_t* pdomain, uint8_t *pdomain_pd, pthread_mutex_t* pmutex, pthread_cond_t* pcondition)
+void ncurses_gui_start(ec_master_t* pmaster, ec_domain_t* pdomain, uint8_t *pdomain_pd, pthread_mutex_t* pmutex, pthread_cond_t* pcondition)
 {
 	pthread_t ncurses_thread_id;
 	pthread_attr_t attr;
@@ -232,6 +203,60 @@ void ncurses_gui_init(ec_master_t* pmaster, ec_domain_t* pdomain, uint8_t *pdoma
     pthread_create(&ncurses_thread_id, &attr, &ncurses_gui, NULL);
 }
 
+// The function is called initializing the ncurses windows after start or resizing the terminal.
+// It must NOT be called in lock situation within function exchange_data
+void ncurses_gui_reinit(void)
+{
+	int ymax, xmax;
+
+
+	endwin();
+
+	initscr();
+	cbreak();
+	noecho();
+	curs_set(0);
+
+	if(!has_colors())
+	{
+		printw("terminal does not support colors");
+	}
+	getmaxyx(stdscr, ymax, xmax);
+
+	win_ethcat = newwin((ymax/2)-2, (xmax/2)-2, 1, 1);
+	win_cia402 = newwin((ymax/2)-2, (xmax/2)-2, 1, xmax/2);
+	win_params = newwin((ymax/2)-2, (xmax)-3, ymax/2, 1);
+	// Set for getch() non blocking
+	if (nodelay (win_ethcat, true) == ERR) {
+	    // some error occurred.
+	}
+	if (nodelay (win_cia402, true) == ERR) {
+	    // some error occurred.
+	}
+	// Turn arrow keys on
+	keypad(win_ethcat, true);
+	keypad(win_cia402, true);
+	start_color();
+	init_pair(1, COLOR_BLUE, COLOR_WHITE);
+	box(win_ethcat, 0, 0);
+	box(win_cia402, 0, 0);
+	box(win_params, 0, 0);
+	wattron(win_ethcat, A_STANDOUT | A_BOLD | COLOR_PAIR(1));
+	mvwprintw(win_ethcat, 0, 1, "EtherCAT");
+	wattroff(win_ethcat, A_STANDOUT | A_BOLD | COLOR_PAIR(1));
+	wattron(win_cia402, A_STANDOUT | A_BOLD | COLOR_PAIR(1));
+	mvwprintw(win_cia402, 0, 1, "CIA402 (PDO's)");
+	wattroff(win_cia402, A_STANDOUT | A_BOLD | COLOR_PAIR(1));
+	wattron(win_params, A_STANDOUT | A_BOLD | COLOR_PAIR(1));
+	mvwprintw(win_params, 0, 1, "Parameter (SDO's)");
+	wattroff(win_params, A_STANDOUT | A_BOLD | COLOR_PAIR(1));
+	wrefresh(win_ethcat);
+	wrefresh(win_cia402);
+	wrefresh(win_params);
+
+	timeout(0);
+	winch_required = false;
+}
 
 void ncurses_gui_deinit(void)
 {
