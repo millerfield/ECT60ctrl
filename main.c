@@ -34,7 +34,7 @@
 /****************************************************************************/
 // Optional features
 #define CONFIGURE_PDOS  1
-//#define SDO_ACCESS      1
+#define SDO_ACCESS      1
 
 // Timing parameter
 #define CYCLE_FREQ 1000
@@ -472,7 +472,7 @@ int main(int argc, char **argv)
     }
 
     /* Call ncurses gui thread */
-    ncurses_gui_start(master, domain1, domain1_pd, &mymutex, &mycondition);
+    ncurses_gui_thread(master, domain1, domain1_pd, &mymutex, &mycondition);
     /* Set priority */
 
     struct sched_param param = {};

@@ -1,5 +1,10 @@
+## What is the ECT60ctrl ?
+The ECT60ctrl can be used to control a Rtelligent ECT60 EtherCAT servo motor driver connected to an EtherCAT master on Linux.
+It's an ncurses based application running on top of the IgH EtherLab EtherCAT master implementation on a Debian Linux like Raspberry Pi OS with a realtime kernel.
+The servo motor is driven in the CiA402 operating mode PV (profile velocity) which is used to simply apply different speeds to the servo motor. Additionally some parameters could be applied to optimize the performance of the drive.
+
 ## Prerequisits:
-Login to the target and install ethercat master from sources of  [IgH master](https://gitlab.com/etherlab.org/ethercat) into filesystem.\
+Login to the target and install ethercat master from sources of [IgH master](https://gitlab.com/etherlab.org/ethercat) into filesystem.\
 Also install additional needed libraries to the target:
 ```
 sudo apt-get install libpigpio-dev libpigpio1 libncurses-dev 

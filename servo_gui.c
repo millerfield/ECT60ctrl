@@ -76,12 +76,17 @@ void print_master_state(WINDOW* win)
 }
 
 
-void print_cia402(WINDOW* win, txpdo_queue_data_t* ptxpdo, rxpdo_queue_data_t* prxpdo)
+void dialog_cia402(WINDOW* win, txpdo_queue_data_t* ptxpdo, rxpdo_queue_data_t* prxpdo)
 {
 	mvwprintw(win_cia402, 1, 2, "Expected velocity: %7ld", prxpdo->velocity_setpoint);
 	mvwprintw(win_cia402, 2, 2, "Actual velocity: %7ld", ptxpdo->velocity);
 	mvwprintw(win_cia402, 3, 2, "Variance: %7ld", ptxpdo->velocity);
 	mvwprintw(win_cia402, 4, 2, "Mode of operation: %1d", ptxpdo->mode_of_operation);
+
+}
+
+void dialog_parameters(WINDOW* win)
+{
 
 }
 
@@ -171,7 +176,8 @@ void* ncurses_gui(void* arg)
         }
 		// print out latest process data
 		print_master_state(win_ethcat);
-		print_cia402(win_cia402, &txpdo_data, &rxpdo_data);
+		dialog_cia402(win_cia402, &txpdo_data, &rxpdo_data);
+		dialog_parameters(win_params);
 		wrefresh(win_ethcat);
 		wrefresh(win_cia402);
 		wrefresh(win_params);
@@ -181,7 +187,7 @@ void* ncurses_gui(void* arg)
 	return NULL;
 }
 
-void ncurses_gui_start(ec_master_t* pmaster, ec_domain_t* pdomain, uint8_t *pdomain_pd, pthread_mutex_t* pmutex, pthread_cond_t* pcondition)
+void ncurses_gui_thread(ec_master_t* pmaster, ec_domain_t* pdomain, uint8_t *pdomain_pd, pthread_mutex_t* pmutex, pthread_cond_t* pcondition)
 {
 	pthread_t ncurses_thread_id;
 	pthread_attr_t attr;
