@@ -18,6 +18,7 @@
 
 #include <stdbool.h>
 #include <unistd.h>
+#include <locale.h>
 #include <curses.h>
 #include <pthread.h>
 #include <mqueue.h>
@@ -215,8 +216,9 @@ void ncurses_gui_reinit(void)
 {
 	int ymax, xmax;
 
-
 	endwin();
+
+	setlocale(LC_ALL, "");
 
 	initscr();
 	cbreak();
@@ -225,8 +227,10 @@ void ncurses_gui_reinit(void)
 
 	if(!has_colors())
 	{
-		printw("terminal does not support colors");
+		printf("terminal does not support colors");
 	}
+	start_color();
+
 	getmaxyx(stdscr, ymax, xmax);
 
 	win_ethcat = newwin((ymax/2)-2, (xmax/2)-2, 1, 1);
@@ -242,7 +246,6 @@ void ncurses_gui_reinit(void)
 	// Turn arrow keys on
 	keypad(win_ethcat, true);
 	keypad(win_cia402, true);
-	start_color();
 	init_pair(1, COLOR_BLUE, COLOR_WHITE);
 	box(win_ethcat, 0, 0);
 	box(win_cia402, 0, 0);

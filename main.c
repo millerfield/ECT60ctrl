@@ -146,7 +146,25 @@ static ec_sync_info_t rtelligent_syncs[] = {
 /*****************************************************************************/
 
 #if SDO_ACCESS
-static ec_sdo_request_t *sdo_2006;
+// SDO entry info equals to PDO entry info
+typedef ec_pdo_entry_info_t ec_sdo_entry_info_t;
+
+
+
+
+static ec_sdo_entry_info_t rtelligent_sdo_entries[] = {
+    {0x6040, 0, 16},
+    {0x6083, 0, 32},
+    {0x6084, 0, 32},
+    {0x60ff, 0, 32},
+    {0x6060, 0, 8},
+	{0x2006, 0, 16}
+};
+
+// For each sdo entry info object there is a configurable request needed, so number of rtelligent_sdo_entries is needed
+static ec_sdo_request_t *sdo_requests[sizeof(rtelligent_sdo_entries)/sizeof(rtelligent_sdo_entries[0])];
+
+
 #endif
 
 /*****************************************************************************/
@@ -199,23 +217,23 @@ struct timespec timespec_add(struct timespec time1, struct timespec time2)
 /*****************************************************************************/
 
 #if SDO_ACCESS
-void read_sdo(void)
+void read_sdo(ec_sdo_request_t* ec_sdo_request)
 {
-    switch (ecrt_sdo_request_state(sdo_2006)) {
+    switch (ecrt_sdo_request_state(ec_sdo_request)) {
         case EC_REQUEST_UNUSED: // request was not used yet
-            ecrt_sdo_request_read(sdo_2006); // trigger first read
+            ecrt_sdo_request_read(ec_sdo_request); // trigger first read
             break;
         case EC_REQUEST_BUSY:
             printf("Still busy...\n");
             break;
         case EC_REQUEST_SUCCESS:
             printf("SDO value: 0x%04X\n",
-                    EC_READ_U16(ecrt_sdo_request_data(sdo_2006)));
-            ecrt_sdo_request_read(sdo_2006); // trigger next read
+                    EC_READ_U16(ecrt_sdo_request_data(ec_sdo_request)));
+            ecrt_sdo_request_read(ec_sdo_request); // trigger next read
             break;
         case EC_REQUEST_ERROR:
             printf("Failed to read SDO!\n");
-            ecrt_sdo_request_read(sdo_2006); // retry reading
+            ecrt_sdo_request_read(ec_sdo_request); // retry reading
             break;
     }
 }
@@ -343,8 +361,11 @@ void cyclic_task()
 #endif
 
 #if SDO_ACCESS
-            // read process data SDO
-            read_sdo();
+            // read SDO's
+            for(int i=0;i++;i<10)
+            {
+            	read_sdo(sdo_requests[i]);
+            }
 #endif
         }
 
@@ -447,10 +468,13 @@ int main(int argc, char **argv)
 
 #if SDO_ACCESS
     printf("Creating SDO requests...\n");
-    if (!(sdo_2006 = ecrt_slave_config_create_sdo_request(sc_ECT60_config, 0x2006, 0, 2))) {
+    for(int i=0;i++;i<10)
+    {
+    if (!(sdo_requests[i] = ecrt_slave_config_create_sdo_request(sc_ECT60_config, 0x2006, 0, 2))) {
         printf("Failed to create SDO request.\n");
     }
-    ecrt_sdo_request_timeout(sdo_2006, 500); // ms
+    ecrt_sdo_request_timeout(sdo_requests[i], 500); // ms
+    }
 #endif
 
     printf("Registering PDO entries...\n");
