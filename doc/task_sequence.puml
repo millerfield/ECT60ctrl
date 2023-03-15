@@ -1,0 +1,47 @@
+@startuml
+hide footbox 
+participant init [
+       =init
+       ----
+       ""init routine""
+]
+
+entity ecat_network
+
+participant cyclic_task [
+       =cyclic_task
+       ----
+       ""1st prio (realtime)""
+]
+
+database queue
+
+participant ncurses_gui [
+       =ncurses_gui
+       ----
+       ""2nd prio""
+]
+
+actor user
+
+activate init
+init -> ncurses_gui: start
+init -> cyclic_task: start
+       loop 1000Hz
+       deactivate init
+       cyclic_task -> cyclic_task: wait until 1ms elapsed
+       ecat_network -> cyclic_task: receive ecat data
+              group mutex locked
+              cyclic_task -> queue: send message with data to queue
+              cyclic_task -> queue: report numbers of messages in queue
+              cyclic_task -> ncurses_gui: signal via condition variable
+              end
+              group mutex locked
+              ncurses_gui -> queue: read number of messages in queue
+              ncurses_gui -> queue: read messages from queue
+              end
+       ncurses_gui -> ncurses_gui: represent data
+       cyclic_task -> ecat_network: send ecat data
+
+end
+@enduml
